@@ -9,16 +9,16 @@ client = AsyncClient(timeout=config.llm_helper_timeout)
 llm_headers = {'Authorization': f'Bearer {config.llm_helper_api_key}', 'Content-Type': 'application/json'}
 
 
-async def request(url: str, count: int = 0) -> Optional[Response]:
+async def fetch_github(url: str, count: int = 0) -> Optional[Response]:
     try:
-        response = await client.get(url, timeout=30)
+        response = await client.get(config.github_proxy + url, timeout=30)
         response.raise_for_status()
         return response
     except Exception as error:
         logger.warning(f'第 {count + 1} 次请求 {url} 失败：{error}')
         await asyncio.sleep(config.llm_helper_retry_delay)
         if count < config.llm_helper_max_retries:
-            return await request(url, count + 1)
+            return await fetch_github(url, count + 1)
         return None
 
 

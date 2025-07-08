@@ -3,6 +3,8 @@ from nonebot.plugin import get_plugin_config
 
 
 class Config(BaseModel):
+    github_proxy: str = 'https://gh-proxy.com/'
+
     llm_helper_api_key: str = ''
     llm_helper_model: str = 'deepseek-chat'
     llm_helper_base_url: str = 'https://api.deepseek.com'

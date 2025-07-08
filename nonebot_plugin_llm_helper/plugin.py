@@ -7,16 +7,17 @@ from nonebot.plugin import PluginMetadata, _managers
 
 @dataclass
 class Param:
+    value: str
     optional: bool
     description: str
 
 
 @dataclass
 class Command:
-    command: str
+    name: str
     description: str
-    usage: str
     example: str
+    alias: list[str] = field(default_factory=list)
     params: dict[str, Param] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -28,13 +29,14 @@ class Command:
 
 @dataclass
 class Plugin:
-    name: str
-    path: Optional[Path]
-    meta: Optional[PluginMetadata]
+    id: str
+    name: Optional[str] = None
+    path: Optional[Path] = None
+    meta: Optional[PluginMetadata] = None
     helper: list[Command] = field(default_factory=list)
 
     def __hash__(self):
-        return hash(self.name)
+        return hash(self.id)
 
     def __post_init__(self) -> None:
         self.helper = [
@@ -49,11 +51,12 @@ def search_plugins() -> set[Plugin]:
         for plugin_id in manager.plugins:
             if plugin_module := sys.modules.get(plugin_id, None):
                 plugin_meta: PluginMetadata | None = getattr(plugin_module, '__plugin_meta__', None)
-                if plugin_meta and plugin_meta.type == 'library':
+                if (not plugin_meta) or plugin_meta.type == 'library':
                     continue
                 if plugin_module.__file__:
                     path = Path(plugin_module.__file__)
-                    plugins.add(Plugin(name=plugin_id, meta=plugin_meta, path=path.parent))
+                    plugin_name = plugin_meta.name.replace(' ', '-')
+                    plugins.add(Plugin(id=plugin_id, name=plugin_name, meta=plugin_meta, path=path.parent))
                 continue
-            plugins.add(Plugin(name=plugin_id, meta=None, path=None))
+            plugins.add(Plugin(id=plugin_id))
     return plugins

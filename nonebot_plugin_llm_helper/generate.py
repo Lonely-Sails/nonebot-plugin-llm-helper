@@ -6,7 +6,7 @@ from pathlib import Path
 from nonebot.log import logger
 
 from .plugin import Plugin, Command
-from .network import request_openai, request
+from .network import request_openai, fetch_github
 from .data import save_helper
 from .config import config
 from .prompt import PROMPT
@@ -27,14 +27,13 @@ def read_file(base_path: Path, path: str) -> str:
     return file_path.read_text(encoding='Utf-8')
 
 
-async def generate_plugin_help(plugin: Plugin) -> Optional[tuple[Plugin, dict]]:
+async def generate_plugin_help(plugin: Plugin) -> bool:
     retry_count = 0
     readme = None
     if plugin.meta.homepage:
         # 先得到插件的README.md
         repo_name = plugin.meta.homepage.split('github.com/')[1]
-        url = f'https://raw.githubusercontent.com/{repo_name}/master/README.md'
-        response = await request(url)
+        response = await fetch_github(f'https://raw.githubusercontent.com/{repo_name}/master/README.md')
         if response is not None:
             readme = response.text
             logger.debug(f'成功获取 {plugin.name} 的 README，文件内容：{readme}')
@@ -46,25 +45,28 @@ async def generate_plugin_help(plugin: Plugin) -> Optional[tuple[Plugin, dict]]:
     while True:
         if retry_count > config.llm_helper_max_retries:
             logger.error(f'{plugin.name} 的 LLM 响应失败！重试次数过多，跳过！')
-            return None
+            return False
         response = await request_openai(messages)
         if response is None:
             retry_count += 1
             logger.warning(f'{plugin.name} 的 LLM 响应失败！重试……')
             continue
         messages.append({'role': 'assistant', 'content': response})
+        response = response.split('</think>')[-1].strip()
         if result_match := re.match(r'<result>(.*)</result>', response, re.DOTALL):
             string_result = result_match.group(1)
             logger.debug(f'{plugin.name} 的 LLM 生成帮助结果：{string_result}')
             try:
                 result = json.loads(string_result.replace('\'', '"'))
+                plugin.helper = [Command(**command) for command in result]
             except json.JSONDecodeError:
+                retry_count += 1
                 logger.error(f'{plugin.name} 的 LLM 生成帮助结果格式错误！重试……')
-                messages.append({'role': 'user', 'content': '你的输出的 Json 格式错误，请重新检查并输出。'})
+                messages.append({'role': 'user', 'content': '你的输出的 Json 格式错误，请重新检查并输出。请注意要将格式正确的 Json 输出在 <result> 标签内，否则我无法解析。'})
                 continue
             logger.success(f'{plugin.name} 的 LLM 生成帮助成功！')
             logger.debug(f'{plugin.name} 的 LLM 生成帮助结果：{result}')
-            return plugin, result
+            return True
         if re.match(r'<list_dir>(.*)</list_dir>', response, re.DOTALL):
             list_dir_content = list_dir(plugin.path)
             messages.append({'role': 'user', 'content': '以下为此项目的目录结构：\n\n' + list_dir_content})
@@ -89,11 +91,6 @@ async def generate_plugins_help(plugins: set[Plugin]) -> None:
             logger.info(f'{plugin.name} 未找到元数据与路径，跳过！')
             continue
         tasks.append(asyncio.create_task(generate_plugin_help(plugin)))
-    results = await asyncio.gather(*tasks)
-    for result in results:
-        if result is None:
-            continue
-        plugin, helper_data = result
-        plugin.helper = [Command(**command) for command in helper_data]
-    logger.success('插件帮助生成完毕！正在保存。')
+    success_count = sum(await asyncio.gather(*tasks))
+    logger.success(f'插件帮助生成完毕！成功生成 {success_count} 个插件的帮助，失败 {len(tasks) - success_count} 个插件。')
     save_helper(plugins)
