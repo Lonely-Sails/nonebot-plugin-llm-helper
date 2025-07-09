@@ -28,7 +28,6 @@ async def request_openai(messages: list[dict]) -> Optional[str]:
         'messages': messages,
     }
     try:
-        logger.debug(f'OpenAI 请求：{json}')
         response = await client.post(
             f'{config.llm_helper_base_url}/chat/completions',
             headers=llm_headers, json=json,

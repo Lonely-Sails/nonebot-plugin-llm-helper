@@ -3,8 +3,8 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "nonebot_plugin_llm_helper"
-version = "0.0.1"
+name = "nonebot-plugin-llm-helper"
+version = "0.0.2"
 description = "一个支持多平台的帮助插件，基于 LLM 解析 Github 仓库或代码。"
 license = "GPL3"
 authors = ["Lonely-Sails"]
@@ -18,6 +18,6 @@ keywords = ["nonebot", "nonebot2", "helper", "llm", "ai"]
 python = "^3.8"
 nonebot2 = "^2.2.0"
 nonebot-plugin-localstore = "^0.7.0"
-nonebot-plugin-alconna = "^1.8.38"
+nonebot-plugin-alconna = "^0.59.0"
 pydantic = "^2.7.4"
 httpx = "^0.28.1"

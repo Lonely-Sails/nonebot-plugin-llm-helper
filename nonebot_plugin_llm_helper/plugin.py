@@ -16,7 +16,6 @@ class Param:
 class Command:
     name: str
     description: str
-    example: str
     alias: list[str] = field(default_factory=list)
     params: dict[str, Param] = field(default_factory=dict)
 

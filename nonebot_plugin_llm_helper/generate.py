@@ -1,7 +1,6 @@
 import re
 import json
 import asyncio
-from typing import Optional
 from pathlib import Path
 from nonebot.log import logger
 
@@ -9,7 +8,7 @@ from .plugin import Plugin, Command
 from .network import request_openai, fetch_github
 from .data import save_helper
 from .config import config
-from .prompt import PROMPT
+from .data import prompt
 
 
 def list_dir(base_path: Path) -> str:
@@ -23,6 +22,8 @@ def list_dir(base_path: Path) -> str:
 
 
 def read_file(base_path: Path, path: str) -> str:
+    if '..' in path:
+        return '你想要读取的文件路径不合法，请重新输入。'
     file_path = base_path / Path(path)
     return file_path.read_text(encoding='Utf-8')
 
@@ -39,7 +40,7 @@ async def generate_plugin_help(plugin: Plugin) -> bool:
             logger.debug(f'成功获取 {plugin.name} 的 README，文件内容：{readme}')
     readme_input = '以下为此项目的 README 文件内容：\n\n' + readme if readme else '暂时无法获取到 README 文件，请你通过把阅读代码来生成插件使用方法和说明文档。'
     messages = [
-        {'role': 'system', 'content': PROMPT},
+        {'role': 'system', 'content': prompt},
         {'role': 'user', 'content': readme_input}
     ]
     while True:
@@ -51,6 +52,7 @@ async def generate_plugin_help(plugin: Plugin) -> bool:
             retry_count += 1
             logger.warning(f'{plugin.name} 的 LLM 响应失败！重试……')
             continue
+        logger.debug(f'{plugin.name} 的 LLM 响应：{response}')
         messages.append({'role': 'assistant', 'content': response})
         response = response.split('</think>')[-1].strip()
         if result_match := re.match(r'<result>(.*)</result>', response, re.DOTALL):

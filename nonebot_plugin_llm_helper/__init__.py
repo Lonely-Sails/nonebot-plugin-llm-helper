@@ -34,7 +34,6 @@ matcher = alconna_command.build(use_cmd_start=True)
 async def list_plugins():
     yield '所有插件列表：'
     for plugin in plugins:
-        print(plugin)
         if plugin.meta:
             yield f'\n  {("☑️", "✅")[bool(plugin.helper)]} {plugin.name}：'
             yield f'    - {plugin.meta.description}'

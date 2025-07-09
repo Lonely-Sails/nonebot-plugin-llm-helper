@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from dataclasses import asdict
 
 from nonebot import require
@@ -7,7 +8,12 @@ from nonebot_plugin_localstore import get_data_file
 
 from .plugin import Plugin, Command
 
+prompt_path = Path(__file__).parent / 'prompt.txt'
 data_file_path = get_data_file('LLM-Helper', 'helper.json')
+
+
+prompt = prompt_path.read_text(encoding='Utf-8')
+
 
 def default_serializer(dump_object):
     if hasattr(dump_object, 'as_posix'):
