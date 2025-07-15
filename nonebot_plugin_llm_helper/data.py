@@ -4,12 +4,12 @@ from dataclasses import asdict
 
 from nonebot import require
 require('nonebot_plugin_localstore')
-from nonebot_plugin_localstore import get_data_file
+from nonebot_plugin_localstore import get_plugin_data_file
 
 from .plugin import Plugin, Command
 
 prompt_path = Path(__file__).parent / 'prompt.txt'
-data_file_path = get_data_file('LLM-Helper', 'helper.json')
+data_file_path = get_plugin_data_file('helper.json')
 
 
 prompt = prompt_path.read_text(encoding='Utf-8')

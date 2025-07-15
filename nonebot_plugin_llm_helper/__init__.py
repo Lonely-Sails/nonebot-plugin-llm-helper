@@ -3,7 +3,6 @@ from nonebot import get_driver, require
 from nonebot.log import logger
 from nonebot.plugin import PluginMetadata
 require('nonebot_plugin_alconna')
-from nonebot.rule import T
 from nonebot_plugin_alconna import Command, Arparma
 
 from .config import Config

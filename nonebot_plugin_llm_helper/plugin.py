@@ -1,8 +1,8 @@
-import sys
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
-from nonebot.plugin import PluginMetadata, _managers
+from nonebot.plugin import get_loaded_plugins
+from nonebot.plugin import PluginMetadata
 
 
 @dataclass
@@ -46,16 +46,14 @@ class Plugin:
 
 def search_plugins() -> set[Plugin]:
     plugins = set()
-    for manager in _managers:
-        for plugin_id in manager.plugins:
-            if plugin_module := sys.modules.get(plugin_id, None):
-                plugin_meta: PluginMetadata | None = getattr(plugin_module, '__plugin_meta__', None)
-                if (not plugin_meta) or plugin_meta.type == 'library':
-                    continue
-                if plugin_module.__file__:
-                    path = Path(plugin_module.__file__)
-                    plugin_name = plugin_meta.name.replace(' ', '-')
-                    plugins.add(Plugin(id=plugin_id, name=plugin_name, meta=plugin_meta, path=path.parent))
-                continue
-            plugins.add(Plugin(id=plugin_id))
+    for plugin in get_loaded_plugins():
+        plugin_meta: PluginMetadata | None = getattr(plugin.module, '__plugin_meta__', None)
+        if (not plugin_meta) or plugin_meta.type == 'library':
+            continue
+        if plugin.module.__file__:
+            path = Path(plugin.module.__file__)
+            plugin_name = plugin_meta.name.replace(' ', '-')
+            plugins.add(Plugin(id=plugin.module_name, name=plugin_name, meta=plugin_meta, path=path.parent))
+            continue
+        plugins.add(Plugin(id=plugin.module_name))
     return plugins
