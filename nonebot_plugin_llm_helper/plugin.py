@@ -47,13 +47,12 @@ class Plugin:
 def search_plugins() -> set[Plugin]:
     plugins = set()
     for plugin in get_loaded_plugins():
-        plugin_meta: PluginMetadata | None = getattr(plugin.module, '__plugin_meta__', None)
-        if (not plugin_meta) or plugin_meta.type == 'library':
+        if (not plugin.metadata) or plugin.metadata.type == 'library':
             continue
         if plugin.module.__file__:
             path = Path(plugin.module.__file__)
-            plugin_name = plugin_meta.name.replace(' ', '-')
-            plugins.add(Plugin(id=plugin.module_name, name=plugin_name, meta=plugin_meta, path=path.parent))
+            plugin_name = plugin.metadata.name.replace(' ', '-')
+            plugins.add(Plugin(id=plugin.module_name, name=plugin_name, meta=plugin.metadata, path=path.parent))
             continue
         plugins.add(Plugin(id=plugin.module_name))
     return plugins

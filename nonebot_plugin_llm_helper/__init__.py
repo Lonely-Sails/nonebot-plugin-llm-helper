@@ -1,7 +1,7 @@
 import asyncio
 from nonebot import get_driver, require
 from nonebot.log import logger
-from nonebot.plugin import PluginMetadata
+from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 require('nonebot_plugin_alconna')
 from nonebot_plugin_alconna import Command, Arparma
 
@@ -11,6 +11,8 @@ from .plugin import Plugin, search_plugins
 from .data import load_helper
 from .utils import get_plugin_by_name, generator_to_string
 
+
+supported_adapters = inherit_supported_adapters('nonebot_plugin_alconna')
 __plugin_meta__ = PluginMetadata(
     name='LLM-Helper',
     description='一个支持多平台的帮助插件，基于 LLM 解析 Github 仓库或代码。',
@@ -18,17 +20,20 @@ __plugin_meta__ = PluginMetadata(
     homepage='https://github.com/Lonely-Sails/nonebot-plugin-llm-helper',
     type='application',
     config=Config,
+    supported_adapters=supported_adapters
 )
 
 plugins: set[Plugin] = set()
 adapter = get_driver()
 
-alconna_command = Command('llm-help [plugin:str]')
-alconna_command.alias('help')
-alconna_command.subcommand('list')
-alconna_command.subcommand('regenerate regen')
-alconna_command.subcommand('search [keyword:str]')
-matcher = alconna_command.build(use_cmd_start=True)
+matcher = (
+    Command('llm-help [plugin:str]')
+    .alias('help')
+    .subcommand('list')
+    .subcommand('regenerate regen')
+    .subcommand('search [keyword:str]')
+    .build(use_cmd_start=True)
+)
 
 async def list_plugins():
     yield '所有插件列表：'
