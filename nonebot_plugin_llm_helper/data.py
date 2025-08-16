@@ -26,10 +26,7 @@ def save_helper(plugins: set[Plugin]) -> None:
         plugin.name: [asdict(command) for command in plugin.helper]
         for plugin in plugins if plugin.helper
     }
-    data_file_path.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2, default=default_serializer),
-        encoding='utf-8'
-    )
+    data_file_path.write_text(json.dumps(data), encoding='utf-8')
 
 
 def load_helper(plguins: set[Plugin]) -> None:

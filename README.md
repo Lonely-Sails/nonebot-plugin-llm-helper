@@ -56,6 +56,8 @@ nb plugin install nonebot-plugin-llm-helper
 | `llm_helper_max_retries` | 否 | `3` | 最大重试次数 |
 | `llm_helper_retry_delay` | 否 | `10` | 重试间隔时间（秒） |
 
+> 建议搭配 https://pollinations.ai/ 使用，但请注意这意味着你的插件源代码可能会公开。
+
 ### 配置示例
 
 ```env
